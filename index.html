@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Gallery</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --panel: #111118;
+      --border: #1e1e2e;
+      --accent: #6c63ff;
+      --accent2: #00d4ff;
+      --text: #e0e0f0;
+      --muted: #555570;
+      --sidebar-w: 220px;
+      --thumb-h: 130px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      overflow: hidden;
+    }
+
+    /* ── Layout ── */
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #sidebar-header {
+      padding: 18px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    #sidebar-header h1 {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      font-weight: 500;
+    }
+
+    #sidebar-header p {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    #demo-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .demo-card {
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+
+    .demo-card:hover {
+      border-color: var(--accent);
+      transform: translateX(2px);
+    }
+
+    .demo-card.active {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 1px var(--accent2)22;
+    }
+
+    .demo-thumb {
+      width: 100%;
+      height: var(--thumb-h);
+      display: block;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .demo-thumb canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Shimmer placeholder while thumb loads */
+    .demo-thumb::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, var(--panel) 25%, var(--border) 50%, var(--panel) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      z-index: 1;
+      transition: opacity 0.4s;
+    }
+
+    .demo-thumb.loaded::before { opacity: 0; pointer-events: none; }
+
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .demo-meta {
+      padding: 8px 10px;
+    }
+
+    .demo-meta strong {
+      display: block;
+      font-size: 11px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .demo-meta span {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* ── Viewer ── */
+    #viewer {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    #viewer-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* HUD overlay */
+    #hud {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    #hud-title {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    #hud-desc {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    #hud-badge {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--accent2);
+      border: 1px solid var(--accent2)55;
+      padding: 3px 8px;
+      border-radius: 3px;
+    }
+
+    #hint {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      pointer-events: none;
+    }
+
+    /* Transition flash */
+    #viewer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    #viewer.switching::after { opacity: 1; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <aside id="sidebar">
+    <div id="sidebar-header">
+      <h1>3D Gallery</h1>
+      <p>Click to explore</p>
+    </div>
+    <div id="demo-list"></div>
+  </aside>
+
+  <main id="viewer">
+    <canvas id="viewer-canvas"></canvas>
+    <div id="hud">
+      <div>
+        <div id="hud-title">—</div>
+        <div id="hud-desc">—</div>
+      </div>
+      <div id="hud-badge">THREE.JS</div>
+    </div>
+    <div id="hint">drag to orbit · scroll to zoom</div>
+  </main>
+</div>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>
