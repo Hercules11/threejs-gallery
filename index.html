@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="./favicon.ico" type="image/x-icon">
   <title>3D Gallery</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #0a0a0f;
@@ -19,7 +27,8 @@
       --thumb-h: 130px;
     }
 
-    html, body {
+    html,
+    body {
       height: 100%;
       background: var(--bg);
       color: var(--text);
@@ -119,11 +128,19 @@
       transition: opacity 0.4s;
     }
 
-    .demo-thumb.loaded::before { opacity: 0; pointer-events: none; }
+    .demo-thumb.loaded::before {
+      opacity: 0;
+      pointer-events: none;
+    }
 
     @keyframes shimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
     }
 
     .demo-meta {
@@ -161,7 +178,9 @@
     /* HUD overlay */
     #hud {
       position: absolute;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      right: 0;
       padding: 16px 20px;
       display: flex;
       align-items: flex-start;
@@ -211,32 +230,37 @@
       pointer-events: none;
       transition: opacity 0.25s;
     }
-    #viewer.switching::after { opacity: 1; }
+
+    #viewer.switching::after {
+      opacity: 1;
+    }
   </style>
 </head>
+
 <body>
-<div id="app">
-  <aside id="sidebar">
-    <div id="sidebar-header">
-      <h1>3D Gallery</h1>
-      <p>Click to explore</p>
-    </div>
-    <div id="demo-list"></div>
-  </aside>
-
-  <main id="viewer">
-    <canvas id="viewer-canvas"></canvas>
-    <div id="hud">
-      <div>
-        <div id="hud-title">—</div>
-        <div id="hud-desc">—</div>
+  <div id="app">
+    <aside id="sidebar">
+      <div id="sidebar-header">
+        <h1>3D Gallery</h1>
+        <p>Click to explore</p>
       </div>
-      <div id="hud-badge">THREE.JS</div>
-    </div>
-    <div id="hint">drag to orbit · scroll to zoom</div>
-  </main>
-</div>
+      <div id="demo-list"></div>
+    </aside>
 
-<script type="module" src="./main.js"></script>
+    <main id="viewer">
+      <canvas id="viewer-canvas"></canvas>
+      <div id="hud">
+        <div>
+          <div id="hud-title">—</div>
+          <div id="hud-desc">—</div>
+        </div>
+        <div id="hud-badge">THREE.JS</div>
+      </div>
+      <div id="hint">drag to orbit · scroll to zoom</div>
+    </main>
+  </div>
+
+  <script type="module" src="./main.js"></script>
 </body>
+
 </html>
